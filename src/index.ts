@@ -1,1 +1,3 @@
-console.log("Hello World!")
+import AvalonServer from "./utils/AvalonServer";
+
+new AvalonServer()

@@ -7,7 +7,7 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "tsc && node dist/index.js",
     "build": "tsc",
     "rebuild": "rm -rf dist && rm tsconfig.tsbuildinfo && tsc",
     "dev": "node src/index.ts",

@@ -3,9 +3,9 @@
     "composite": true,
     "outDir": "dist",
     "rootDir": "src",
-    "module": "node16",
+    "module": "nodenext",
     "target": "esnext",
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true
