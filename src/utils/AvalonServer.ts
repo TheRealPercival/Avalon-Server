@@ -2,9 +2,13 @@ import { Server, Socket } from "socket.io";
 import Stage from "../types/Stage"
 import Settings from "./Settings"
 import os from "os"
+import packageJSON from "../../package.json"
+import ServerInfo from "../types/ServerInfo";
+import ServerEvent from "../types/ServerEvent";
 
 export default class AvalonServer {
     private server: Server;
+    private info: ServerInfo;
     private sockets: Set<Socket>
 
     private settings: Settings
@@ -15,6 +19,12 @@ export default class AvalonServer {
         this.sockets = new Set()
         this.stage = Stage.setup
         this.settings = new Settings()
+
+        this.info = {
+            version: packageJSON.version,
+            supabaseURL: "IMPORT_FROM_ENV",
+            supabaseAnonKey: "IMPORT_FROM_ENV"
+        }
     }
 
     private static getServerIPAddress = (): string => {
@@ -62,11 +72,8 @@ export default class AvalonServer {
         this.sockets.add(socket)
 
         socket.on("disconnect", () => this.onDisconnect(socket))
-        
-        socket.emit("state", {
-            stage: this.stage,
-            settings: this.settings.getModel()
-        })
+
+        socket.emit(ServerEvent.info, this.info)
     }
 
     private onReconnect = (socket: Socket) => {
