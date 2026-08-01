@@ -5,6 +5,7 @@ import os from "os"
 import packageJSON from "../../package.json"
 import ServerInfo from "../types/ServerInfo";
 import ServerEvent from "../types/ServerEvent";
+import Environment from "./Environment";
 
 export default class AvalonServer {
     private server: Server;
@@ -15,16 +16,16 @@ export default class AvalonServer {
     private stage: Stage
 
     constructor() {
-        this.server = this.createServer()
+        this.info = {
+            version: packageJSON.version,
+            supabaseURL: Environment.getSupabaseURL(),
+            supabaseAnonKey: Environment.getSupabaseAnonKey()
+        }
+
         this.sockets = new Set()
         this.stage = Stage.setup
         this.settings = new Settings()
-
-        this.info = {
-            version: packageJSON.version,
-            supabaseURL: "IMPORT_FROM_ENV",
-            supabaseAnonKey: "IMPORT_FROM_ENV"
-        }
+        this.server = this.createServer()
     }
 
     private static getServerIPAddress = (): string => {
@@ -49,7 +50,7 @@ export default class AvalonServer {
         })
 
         const address = AvalonServer.getServerIPAddress()
-        const fullServerAddress = `${address}:${port}`
+        const fullServerAddress = `http://${address}:${port}`
 
         console.log("Avalon server started at", fullServerAddress)
 
