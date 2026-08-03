@@ -26,4 +26,15 @@ export default class Environment {
 
     return supabaseAnonKey;
   };
+
+  static getPort = (): number => {
+    const defaultPort = 8000
+    const portString = process.env.PORT;
+    if (!portString) return defaultPort
+
+    const port = parseInt(portString)
+    if (Number.isNaN(port)) return defaultPort
+
+    return port
+  }
 }

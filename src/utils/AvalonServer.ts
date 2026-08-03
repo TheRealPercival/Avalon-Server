@@ -36,7 +36,7 @@ export default class AvalonServer {
     }
 
     private createServer = (): Server => {
-        const port = 8000
+        const port = Environment.getPort()
         const server = new Server(port)
 
         const address = AvalonServer.getServerIPAddress()
