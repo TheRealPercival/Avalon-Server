@@ -49,7 +49,7 @@ export default class AvalonServer {
     }
 
     private onConnect = async (socket: Socket) => {
-        const user = await AvalonUser.create(socket, this.info)
+        const user = await AvalonUser.create(socket)
 
         if(user) {
             this.onAuthConnect(user)

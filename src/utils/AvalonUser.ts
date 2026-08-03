@@ -6,7 +6,7 @@ import ServerInfo from "../types/ServerInfo";
 export default class AvalonUser {
     constructor(public socket: Socket, private userData: User, private supabaseClient: SupabaseClient) {}
 
-    public static create = async (socket: Socket, serverInfo: ServerInfo): Promise<AvalonUser | null> => {
+    public static create = async (socket: Socket): Promise<AvalonUser | null> => {
         const { access_token, refresh_token } = socket.handshake.auth;
         if (!access_token || !refresh_token) return null
 
