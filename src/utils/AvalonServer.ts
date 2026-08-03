@@ -7,8 +7,6 @@ import Environment from "./Environment";
 import AvalonUser from "./AvalonUser";
 
 export default class AvalonServer {
-    private static reconnectWindow = 10
-
     private server: Server;
     private info: ServerInfo;
     private users: Set<AvalonUser>
@@ -39,11 +37,7 @@ export default class AvalonServer {
 
     private createServer = (): Server => {
         const port = 8000
-        const server = new Server(port, {
-            cors: {
-                origin: "*"
-            }
-        })
+        const server = new Server(port)
 
         const address = AvalonServer.getServerIPAddress()
         const fullServerAddress = `http://${address}:${port}`
@@ -84,21 +78,6 @@ export default class AvalonServer {
 
     private onAuthDisconnect = (user: AvalonUser) => {
         console.log(`- User "${user.getName()}" disconnected\n  └ ${user.socket.id}\n`)
-
-        const removeTimedOutUser = () => {
-            if (this.users.has(user) && !user.socket.connected) {
-                this.users.delete(user)
-                console.log(`- User "${user.getName()}" timed out\n  └ ${user.socket.id}\n`)
-            }
-        }
-
-        const timeout = AvalonServer.reconnectWindow * 1000
-
-        setTimeout(removeTimedOutUser, timeout)
-    }
-
-    // Add this back into flow
-    private onReconnect = (socket: Socket) => {
-        console.log(`Socket reconnected: ${socket.id}`)
+        this.users.delete(user)
     }
 }
