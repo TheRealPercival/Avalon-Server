@@ -1,19 +1,17 @@
-import { Server, Socket } from "socket.io";
-import Stage from "../types/Stage"
-import Settings from "./Settings"
 import os from "os"
+import { Server, Socket } from "socket.io";
 import packageJSON from "../../package.json"
 import ServerInfo from "../types/ServerInfo";
 import ServerEvent from "../types/ServerEvent";
 import Environment from "./Environment";
+import AvalonUser from "./AvalonUser";
 
 export default class AvalonServer {
+    private static reconnectWindow = 10
+
     private server: Server;
     private info: ServerInfo;
-    private sockets: Set<Socket>
-
-    private settings: Settings
-    private stage: Stage
+    private users: Set<AvalonUser>
 
     constructor() {
         this.info = {
@@ -22,9 +20,7 @@ export default class AvalonServer {
             supabaseAnonKey: Environment.getSupabaseAnonKey()
         }
 
-        this.sockets = new Set()
-        this.stage = Stage.setup
-        this.settings = new Settings()
+        this.users = new Set()
         this.server = this.createServer()
     }
 
@@ -58,37 +54,51 @@ export default class AvalonServer {
         return server
     }
 
-    private onConnect = (socket: Socket) => {
-        const staleSocket = this.sockets.values().find(s => {
-            return s.handshake.address == socket.handshake.address && !s.connected
-        })
-        
-        if (staleSocket) {
-            this.sockets.delete(staleSocket)
-            this.onReconnect(socket)
+    private onConnect = async (socket: Socket) => {
+        const user = await AvalonUser.create(socket, this.info)
+
+        if(user) {
+            this.onAuthConnect(user)
         } else {
-            console.log(`New socket connected: ${socket.id}`)
+            this.onAnonymousConnect(socket)
         }
+    }
 
-        this.sockets.add(socket)
-
-        socket.on("disconnect", () => this.onDisconnect(socket))
+    private onAnonymousConnect = (socket: Socket) => {
+        console.log(`+ Anonymous socket connected\n  └ ${socket.id}\n`)
+        socket.on("disconnect", () => this.onAnonymousDisconnect(socket))
 
         socket.emit(ServerEvent.info, this.info)
     }
 
-    private onReconnect = (socket: Socket) => {
-        console.log(`Socket reconnected: ${socket.id}`)
+    private onAnonymousDisconnect = (socket: Socket) => {
+        console.log(`- Anonymous socket disconnected\n  └ ${socket.id}\n`)
     }
 
-    private onDisconnect = (socket: Socket) => {
-        console.log(`Socket disconnected: ${socket.id}`)
+    private onAuthConnect = (user: AvalonUser) => {
+        console.log(`+ User "${user.getName()}" connected\n  └ ${user.socket.id}\n`)
+        user.socket.on("disconnect", () => this.onAuthDisconnect(user))
 
-        setTimeout(() => {
-            if (this.sockets.has(socket)) {
-                this.sockets.delete(socket)
-                console.log(`Removed stale socket: ${socket.id}`)
+        this.users.add(user)
+    }
+
+    private onAuthDisconnect = (user: AvalonUser) => {
+        console.log(`- User "${user.getName()}" disconnected\n  └ ${user.socket.id}\n`)
+
+        const removeTimedOutUser = () => {
+            if (this.users.has(user) && !user.socket.connected) {
+                this.users.delete(user)
+                console.log(`- User "${user.getName()}" timed out\n  └ ${user.socket.id}\n`)
             }
-        }, 10000)
+        }
+
+        const timeout = AvalonServer.reconnectWindow * 1000
+
+        setTimeout(removeTimedOutUser, timeout)
+    }
+
+    // Add this back into flow
+    private onReconnect = (socket: Socket) => {
+        console.log(`Socket reconnected: ${socket.id}`)
     }
 }
