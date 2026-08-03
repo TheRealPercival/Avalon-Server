@@ -42,7 +42,7 @@ export default class AvalonServer {
         const address = AvalonServer.getServerIPAddress()
         const fullServerAddress = `http://${address}:${port}`
 
-        console.log("Avalon server started at", fullServerAddress)
+        console.log(`Avalon server started at ${fullServerAddress}\n`)
 
         server.on("connect", this.onConnect)
         return server
