@@ -1,7 +1,6 @@
 import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { Socket } from "socket.io";
 import Environment from "./Environment";
-import ServerInfo from "../types/ServerInfo";
 
 export default class AvalonUser {
     constructor(public socket: Socket, private userData: User, private supabaseClient: SupabaseClient) {}
@@ -21,18 +20,15 @@ export default class AvalonUser {
         return new AvalonUser(socket, authResponse.data.user, supabaseClient)
     }
 
-    public getName = (): string => {
-        return this.getDiscordName() ?? "Unknown User"
+    public getUsername = (): string => {
+        return this.getDiscordName() ?? "UnknownUser"
     }
 
     private getDiscordName = (): string | null => {
         const metadata = this.userData.user_metadata
 
-        const customClaims = metadata["custom_claims"]
-        if(!customClaims || typeof customClaims !== "object") return null
-
-        const discordName = customClaims["global_name"]
-        if(!discordName || typeof discordName !== "string") return null
+        const discordName = metadata["full_name"]
+        if (!discordName || typeof discordName !== "string") return null
 
         return discordName
     }

@@ -70,14 +70,14 @@ export default class AvalonServer {
     }
 
     private onAuthConnect = (user: AvalonUser) => {
-        console.log(`+ User "${user.getName()}" connected\n  └ ${user.socket.id}\n`)
+        console.log(`+ User @${user.getUsername()} connected\n  └ ${user.socket.id}\n`)
         user.socket.on("disconnect", () => this.onAuthDisconnect(user))
 
         this.users.add(user)
     }
 
     private onAuthDisconnect = (user: AvalonUser) => {
-        console.log(`- User "${user.getName()}" disconnected\n  └ ${user.socket.id}\n`)
+        console.log(`- User @${user.getUsername()} disconnected\n  └ ${user.socket.id}\n`)
         this.users.delete(user)
     }
 }
