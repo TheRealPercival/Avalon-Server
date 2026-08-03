@@ -42,7 +42,7 @@ export default class AvalonServer {
         const address = AvalonServer.getServerIPAddress()
         const fullServerAddress = `http://${address}:${port}`
 
-        console.log(`Avalon server started at ${fullServerAddress}\n`)
+        console.log(`${new Date().toISOString()}\nAvalon server started at ${fullServerAddress}\n`)
 
         server.on("connect", this.onConnect)
         return server
@@ -59,25 +59,25 @@ export default class AvalonServer {
     }
 
     private onAnonymousConnect = (socket: Socket) => {
-        console.log(`+ Anonymous socket connected\n  └ ${socket.id}\n`)
+        console.log(`${new Date().toISOString()}\n+ Anonymous socket connected\n  └ ${socket.id}\n`)
         socket.on("disconnect", () => this.onAnonymousDisconnect(socket))
 
         socket.emit(ServerEvent.info, this.info)
     }
 
     private onAnonymousDisconnect = (socket: Socket) => {
-        console.log(`- Anonymous socket disconnected\n  └ ${socket.id}\n`)
+        console.log(`${new Date().toISOString()}\n- Anonymous socket disconnected\n  └ ${socket.id}\n`)
     }
 
     private onAuthConnect = (user: AvalonUser) => {
-        console.log(`+ User @${user.getUsername()} connected\n  └ ${user.socket.id}\n`)
+        console.log(`${new Date().toISOString()}\n+ User @${user.getUsername()} connected\n  └ ${user.socket.id}\n`)
         user.socket.on("disconnect", () => this.onAuthDisconnect(user))
 
         this.users.add(user)
     }
 
     private onAuthDisconnect = (user: AvalonUser) => {
-        console.log(`- User @${user.getUsername()} disconnected\n  └ ${user.socket.id}\n`)
+        console.log(`${new Date().toISOString()}\n- User @${user.getUsername()} disconnected\n  └ ${user.socket.id}\n`)
         this.users.delete(user)
     }
 }
