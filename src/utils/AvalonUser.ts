@@ -3,7 +3,7 @@ import { Socket } from "socket.io";
 import Environment from "./Environment";
 
 export default class AvalonUser {
-    constructor(public socket: Socket, private userData: User, private supabaseClient: SupabaseClient) {}
+    constructor(public socket: Socket, private userData: User, private supabaseClient: SupabaseClient) { }
 
     public static create = async (socket: Socket): Promise<AvalonUser | null> => {
         const { access_token, refresh_token } = socket.handshake.auth;

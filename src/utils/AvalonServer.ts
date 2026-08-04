@@ -51,7 +51,7 @@ export default class AvalonServer {
     private onConnect = async (socket: Socket) => {
         const user = await AvalonUser.create(socket)
 
-        if(user) {
+        if (user) {
             this.onAuthConnect(user)
         } else {
             this.onAnonymousConnect(socket)
