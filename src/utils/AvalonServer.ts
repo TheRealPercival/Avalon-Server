@@ -5,11 +5,14 @@ import ServerInfo from "../types/ServerInfo";
 import ServerEvent from "../types/ServerEvent";
 import Environment from "./Environment";
 import AvalonUser from "./AvalonUser";
+import ClientEvent from "../types/ClientEvent";
 
 export default class AvalonServer {
+    static sessionName: string = "session"
+
     private server: Server;
     private info: ServerInfo;
-    private users: Set<AvalonUser>
+    private users: { [id: string]: AvalonUser }
 
     constructor() {
         this.info = {
@@ -18,7 +21,7 @@ export default class AvalonServer {
             supabaseAnonKey: Environment.getSupabaseAnonKey()
         }
 
-        this.users = new Set()
+        this.users = {}
         this.server = this.createServer()
     }
 
@@ -72,12 +75,14 @@ export default class AvalonServer {
     private onAuthConnect = (user: AvalonUser) => {
         console.log(`${new Date().toISOString()}\n+ User @${user.getUsername()} connected\n  └ ${user.socket.id}\n`)
         user.socket.on("disconnect", () => this.onAuthDisconnect(user))
+        user.socket.on(ClientEvent.joinSession, user.joinSession)
+        user.socket.on(ClientEvent.leaveSession, user.leaveSession)
 
-        this.users.add(user)
+        this.users[user.getId()] = user
     }
 
     private onAuthDisconnect = (user: AvalonUser) => {
         console.log(`${new Date().toISOString()}\n- User @${user.getUsername()} disconnected\n  └ ${user.socket.id}\n`)
-        this.users.delete(user)
+        delete this.users[user.getId()]
     }
 }

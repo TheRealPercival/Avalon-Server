@@ -1,8 +1,11 @@
 import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { Socket } from "socket.io";
 import Environment from "./Environment";
+import AvalonServer from "./AvalonServer";
 
 export default class AvalonUser {
+    private isInSession: boolean = false
+
     constructor(public socket: Socket, private userData: User, private supabaseClient: SupabaseClient) { }
 
     public static create = async (socket: Socket): Promise<AvalonUser | null> => {
@@ -20,8 +23,24 @@ export default class AvalonUser {
         return new AvalonUser(socket, authResponse.data.user, supabaseClient)
     }
 
-    public getUsername = (): string => {
-        return this.getDiscordName() ?? "UnknownUser"
+    public getId = (): string => this.userData.id
+
+    public getUsername = (): string => this.getDiscordName() ?? "unknown"
+
+    public joinSession = () => {
+        if (this.isInSession) return
+
+        console.log(`${new Date().toISOString()}\n+ User @${this.getUsername()} joined the session\n  └ ${this.socket.id}\n`)
+        this.socket.join(AvalonServer.sessionName)
+        this.isInSession = true
+    }
+
+    public leaveSession = () => {
+        if (!this.isInSession) return
+
+        console.log(`${new Date().toISOString()}\n+ User @${this.getUsername()} left the session\n  └ ${this.socket.id}\n`)
+        this.socket.leave(AvalonServer.sessionName)
+        this.isInSession = false
     }
 
     private getDiscordName = (): string | null => {
