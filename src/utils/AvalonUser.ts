@@ -2,6 +2,8 @@ import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { Socket } from "socket.io";
 import Environment from "./Environment";
 import AvalonServer from "./AvalonServer";
+import ServerEvent from "../types/ServerEvent";
+import UserPayload from "../types/UserPayload";
 
 export default class AvalonUser {
     private isInSession: boolean = false
@@ -27,20 +29,26 @@ export default class AvalonUser {
 
     public getUsername = (): string => this.getDiscordName() ?? "unknown"
 
+    public getIsInSession = (): boolean => this.isInSession
+
     public joinSession = () => {
         if (this.isInSession) return
 
         console.log(`${new Date().toISOString()}\n+ User @${this.getUsername()} joined the session\n  └ ${this.socket.id}\n`)
         this.socket.join(AvalonServer.sessionName)
         this.isInSession = true
+
+        this.socket.broadcast.emit(ServerEvent.joinedSession, this.getUserPayload())
     }
 
     public leaveSession = () => {
         if (!this.isInSession) return
 
-        console.log(`${new Date().toISOString()}\n+ User @${this.getUsername()} left the session\n  └ ${this.socket.id}\n`)
+        console.log(`${new Date().toISOString()}\n- User @${this.getUsername()} left the session\n  └ ${this.socket.id}\n`)
         this.socket.leave(AvalonServer.sessionName)
         this.isInSession = false
+
+        this.socket.broadcast.emit(ServerEvent.leftSession, this.getUserPayload())
     }
 
     private getDiscordName = (): string | null => {
@@ -51,4 +59,14 @@ export default class AvalonUser {
 
         return discordName
     }
+
+    private getAvatarURL = (): string | null => {
+        return this.userData.user_metadata["picture"] ?? null
+    }
+
+    public getUserPayload = (): UserPayload => ({
+        id: this.getId(),
+        name: this.getUsername(),
+        avatarURL: this.getAvatarURL()
+    })
 }

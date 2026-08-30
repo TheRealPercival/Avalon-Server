@@ -1,16 +1,24 @@
 import os from "os"
-import { Server, Socket } from "socket.io";
+import { DefaultEventsMap, ExtendedError, RemoteSocket, Server, Socket } from "socket.io";
 import packageJSON from "../../package.json"
 import ServerInfo from "../types/ServerInfo";
 import ServerEvent from "../types/ServerEvent";
 import Environment from "./Environment";
 import AvalonUser from "./AvalonUser";
 import ClientEvent from "../types/ClientEvent";
+import UserPayload from "../types/UserPayload";
+
+class WebSocketServer extends Server<
+    DefaultEventsMap,
+    DefaultEventsMap,
+    DefaultEventsMap,
+    AvalonUser | null
+> { }
 
 export default class AvalonServer {
     static sessionName: string = "session"
 
-    private server: Server;
+    readonly server: WebSocketServer;
     private info: ServerInfo;
     private users: { [id: string]: AvalonUser }
 
@@ -38,21 +46,31 @@ export default class AvalonServer {
         return "localhost";
     }
 
-    private createServer = (): Server => {
+    private createServer = (): WebSocketServer => {
         const port = Environment.getPort()
-        const server = new Server(port)
+        const server = new WebSocketServer(port)
 
         const address = AvalonServer.getServerIPAddress()
         const fullServerAddress = `http://${address}:${port}`
 
         console.log(`${new Date().toISOString()}\nAvalon server started at ${fullServerAddress}\n`)
 
+        server.use(AvalonServer.authenticateSocket)
         server.on("connect", this.onConnect)
+
         return server
     }
 
-    private onConnect = async (socket: Socket) => {
-        const user = await AvalonUser.create(socket)
+    private static authenticateSocket = async (
+        socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, AvalonUser | null>,
+        next: (err?: ExtendedError) => void
+    ) => {
+        socket.data = await AvalonUser.create(socket)
+        next()
+    }
+
+    private onConnect = (socket: Socket) => {
+        const user = socket.data
 
         if (user) {
             this.onAuthConnect(user)
@@ -75,6 +93,8 @@ export default class AvalonServer {
     private onAuthConnect = (user: AvalonUser) => {
         console.log(`${new Date().toISOString()}\n+ User @${user.getUsername()} connected\n  └ ${user.socket.id}\n`)
         user.socket.on("disconnect", () => this.onAuthDisconnect(user))
+
+        user.socket.on(ClientEvent.getSessionInfo, (args) => this.onGetSessionInfo(user, args))
         user.socket.on(ClientEvent.joinSession, user.joinSession)
         user.socket.on(ClientEvent.leaveSession, user.leaveSession)
 
@@ -83,6 +103,18 @@ export default class AvalonServer {
 
     private onAuthDisconnect = (user: AvalonUser) => {
         console.log(`${new Date().toISOString()}\n- User @${user.getUsername()} disconnected\n  └ ${user.socket.id}\n`)
+
+        user.leaveSession()
         delete this.users[user.getId()]
+    }
+
+    private onGetSessionInfo = (user: AvalonUser, emitAck: (data: UserPayload[]) => void) => {
+        console.log(`${new Date().toISOString()}\n? User @${user.getUsername()} requested session info\n  └ ${user.socket.id}\n`)
+
+        const userPayloads = Object.values(this.users)
+            .filter(u => u.getIsInSession())
+            .map(u => u.getUserPayload())
+
+        emitAck(userPayloads)
     }
 }
