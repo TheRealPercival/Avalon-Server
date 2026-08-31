@@ -4,6 +4,7 @@ import Environment from "./Environment";
 import AvalonServer from "./AvalonServer";
 import ServerEvent from "../types/ServerEvent";
 import UserPayload from "../types/UserPayload";
+import ActionSuccess from "../types/ActionSuccess";
 
 export default class AvalonUser {
     private isInSession: boolean = false
@@ -31,12 +32,16 @@ export default class AvalonUser {
 
     public getIsInSession = (): boolean => this.isInSession
 
-    public joinSession = () => {
-        if (this.isInSession) return
+    public joinSession = (emitAck: (data: ActionSuccess) => void) => {
+        if (this.isInSession) {
+            emitAck({ success: true })
+            return
+        }
 
         console.log(`${new Date().toISOString()}\n+ User @${this.getUsername()} joined the session\n  └ ${this.socket.id}\n`)
         this.socket.join(AvalonServer.sessionName)
         this.isInSession = true
+        emitAck({ success: true })
 
         this.socket.broadcast.emit(ServerEvent.joinedSession, this.getUserPayload())
     }

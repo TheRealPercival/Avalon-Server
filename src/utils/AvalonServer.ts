@@ -95,7 +95,7 @@ export default class AvalonServer {
         user.socket.on("disconnect", () => this.onAuthDisconnect(user))
 
         user.socket.on(ClientEvent.getSessionInfo, (args) => this.onGetSessionInfo(user, args))
-        user.socket.on(ClientEvent.joinSession, user.joinSession)
+        user.socket.on(ClientEvent.joinSession, (args) => user.joinSession(args))
         user.socket.on(ClientEvent.leaveSession, user.leaveSession)
 
         this.users[user.getId()] = user
