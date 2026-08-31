@@ -6,7 +6,7 @@ import ServerEvent from "../types/ServerEvent";
 import Environment from "./Environment";
 import AvalonUser from "./AvalonUser";
 import ClientEvent from "../types/ClientEvent";
-import UserPayload from "../types/UserPayload";
+import SessionInfo from "../types/SessionInfo";
 
 class WebSocketServer extends Server<
     DefaultEventsMap,
@@ -108,13 +108,18 @@ export default class AvalonServer {
         delete this.users[user.getId()]
     }
 
-    private onGetSessionInfo = (user: AvalonUser, emitAck: (data: UserPayload[]) => void) => {
+    private onGetSessionInfo = (user: AvalonUser, emitAck: (data: SessionInfo) => void) => {
         console.log(`${new Date().toISOString()}\n? User @${user.getUsername()} requested session info\n  └ ${user.socket.id}\n`)
 
         const userPayloads = Object.values(this.users)
             .filter(u => u.getIsInSession())
             .map(u => u.getUserPayload())
 
-        emitAck(userPayloads)
+        const sessionInfo: SessionInfo = {
+            inSession: user.getIsInSession(),
+            users: userPayloads
+        }
+
+        emitAck(sessionInfo)
     }
 }
