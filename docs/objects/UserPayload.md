@@ -2,7 +2,7 @@
 
 | Property | Type | Description |
 | -------- | ---- | ----------- |
-| `id` | `string` | The users's Supabase ID |
+| `id` | `string` | The user's Supabase ID |
 | `name` | `string` | The user's Discord username |
 | `avatarURL` | `string?` | The URL for the user's Discord avatar |
 
