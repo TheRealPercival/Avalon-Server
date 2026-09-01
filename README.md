@@ -8,4 +8,4 @@ This backend project is written using the Socket.IO framework in TypeScript.
 
 This server communicates with frontend clients for [iOS](https://github.com/TheRealPercival/Avalon-iOS) and [Android](https://github.com/TheRealPercival/Avalon-Android).
 
-Documentation for events and object models can be found in [`/docs`](./docs/index.md).
+Documentation for events and object models can be found in [`/docs`](./docs).
