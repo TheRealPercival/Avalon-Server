@@ -46,12 +46,13 @@ export default class AvalonUser {
         this.socket.broadcast.emit(ServerEvent.joinedSession, this.getUserPayload())
     }
 
-    public leaveSession = () => {
+    public leaveSession = (emitAck: (data: ActionSuccess) => void = () => { }) => {
         if (!this.isInSession) return
 
         console.log(`${new Date().toISOString()}\n- User @${this.getUsername()} left the session\n  └ ${this.socket.id}\n`)
         this.socket.leave(AvalonServer.sessionName)
         this.isInSession = false
+        emitAck({ success: true })
 
         this.socket.broadcast.emit(ServerEvent.leftSession, this.getUserPayload())
     }
